@@ -17,11 +17,15 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('users')
 @ApiTags('用户管理')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post()
   @ApiOperation({
@@ -33,6 +37,8 @@ export class UserController {
   })
   @ApiBearerAuth()
   create(@Body() createUserDto: CreateUserDto) {
+    // 测试全局配置信息
+    console.log('ENV:URL:', this.configService.get<string>('database.url'));
     return this.userService.create(createUserDto);
   }
 

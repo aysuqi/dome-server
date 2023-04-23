@@ -1,10 +1,8 @@
+import { Common } from 'src/shared/entities/common.entity';
 import { Column, Entity, ObjectId, ObjectIdColumn } from 'typeorm';
 
 @Entity()
-export class User {
-  @ObjectIdColumn()
-  _id: ObjectId;
-
+export class User extends Common {
   @Column('text')
   phone: string;
 

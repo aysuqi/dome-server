@@ -30,7 +30,7 @@ export class UserService {
     page,
   }: PaginationParamsDto): Promise<{ data: User[]; total: number }> {
     const [data, total] = await this.userRepository.findAndCount({
-      order: { name: 'DESC' },
+      order: { createAt: 'DESC' },
       skip: (page - 1) * pageSize,
       take: pageSize * 1,
       cache: true,

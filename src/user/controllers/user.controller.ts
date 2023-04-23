@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
@@ -17,15 +18,17 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { ConfigService } from '@nestjs/config';
+import {
+  BaseApiErrorResponse,
+  SwaggerBaseApiResponse,
+} from 'src/shared/dots/base-api-response.dto';
+import { query } from 'express';
+import { PaginationParamsDto } from 'src/shared/dots/pagination-params.dto';
 
 @Controller('users')
 @ApiTags('用户管理')
 export class UserController {
-  constructor(
-    private readonly userService: UserService,
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   @Post()
   @ApiOperation({
@@ -33,12 +36,15 @@ export class UserController {
   })
   @ApiResponse({
     status: HttpStatus.CREATED,
-    type: CreateUserDto,
+    type: SwaggerBaseApiResponse(CreateUserDto),
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    type: BaseApiErrorResponse,
   })
   @ApiBearerAuth()
   create(@Body() createUserDto: CreateUserDto) {
     // 测试全局配置信息
-    console.log('ENV:URL:', this.configService.get<string>('database.url'));
     return this.userService.create(createUserDto);
   }
 
@@ -47,11 +53,16 @@ export class UserController {
     summary: '查询所有用户',
   })
   @ApiResponse({
-    status: HttpStatus.CREATED,
-    type: CreateUserDto,
+    status: HttpStatus.OK,
+    type: SwaggerBaseApiResponse([CreateUserDto]),
   })
-  findAll() {
-    return this.userService.findAll();
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    type: BaseApiErrorResponse,
+  })
+  async findAll(@Query() query: PaginationParamsDto) {
+    const { data, total } = await this.userService.findAll(query);
+    return { data, total };
   }
 
   @ApiOperation({

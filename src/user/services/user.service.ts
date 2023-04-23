@@ -5,6 +5,7 @@ import { SystemService } from '../../shared/system.service';
 import { MongoRepository } from 'typeorm';
 import { User } from '../entities/user.mongo.entity';
 import { AppLogger } from 'src/shared/logger/logger.service';
+import { PaginationParamsDto } from 'src/shared/dots/pagination-params.dto';
 
 @Injectable()
 export class UserService {
@@ -21,22 +22,23 @@ export class UserService {
   }
 
   create(createUserDto: CreateUserDto) {
-    // 测试 SystemService
-    console.log('system', this.systemService.test());
-    // 测试 mongo 数据库
-    return this.userRepository.save({
-      phone: '18712312345',
-      name: 'mongo',
-      password: '123456',
-      email: '1@1.com',
-    });
+    return this.userRepository.save(createUserDto);
   }
 
-  findAll() {
-    // 测试日志
-    this.logger.info(null, 'test logger', { name: 'logger info' });
-    this.logger.debug(null, 'test logger', { name: 'logger debug' });
-    return this.userRepository.findAndCount({});
+  async findAll({
+    pageSize,
+    page,
+  }: PaginationParamsDto): Promise<{ data: User[]; total: number }> {
+    const [data, total] = await this.userRepository.findAndCount({
+      order: { name: 'DESC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize * 1,
+      cache: true,
+    });
+    return {
+      data,
+      total,
+    };
   }
 
   findOne(id: number) {

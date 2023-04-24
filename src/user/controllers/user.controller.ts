@@ -30,7 +30,6 @@ import { PaginationParamsDto } from 'src/shared/dots/pagination-params.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post()
   @ApiOperation({
     summary: '新增用户',
   })
@@ -43,12 +42,12 @@ export class UserController {
     type: BaseApiErrorResponse,
   })
   @ApiBearerAuth()
+  @Post()
   create(@Body() createUserDto: CreateUserDto) {
     // 测试全局配置信息
     return this.userService.create(createUserDto);
   }
 
-  @Get()
   @ApiOperation({
     summary: '查询所有用户',
   })
@@ -69,35 +68,46 @@ export class UserController {
     summary: '查询一个用户',
   })
   @ApiResponse({
-    status: HttpStatus.CREATED,
-    type: CreateUserDto,
+    status: HttpStatus.OK,
+    type: SwaggerBaseApiResponse(CreateUserDto),
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    type: BaseApiErrorResponse,
   })
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    return {
+      data: await this.userService.findOne(+id),
+    };
   }
 
   @ApiOperation({
     summary: '更新用户信息',
   })
   @ApiResponse({
-    status: HttpStatus.CREATED,
-    type: CreateUserDto,
+    status: HttpStatus.OK,
+    type: SwaggerBaseApiResponse(CreateUserDto),
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    type: BaseApiErrorResponse,
   })
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    const data = await this.userService.update(+id, updateUserDto);
+    return {
+      data,
+    };
   }
 
   @ApiOperation({
     summary: '删除用户',
   })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    type: CreateUserDto,
-  })
+  @ApiResponse({ status: HttpStatus.OK })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND })
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  async remove(@Param('id') id: string) {
+    return await this.userService.remove(+id);
   }
 }

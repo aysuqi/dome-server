@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
-import { UpdateUserDto } from '../dtos/update-user.dto';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -57,6 +56,7 @@ export class UserController {
     status: HttpStatus.NOT_FOUND,
     type: BaseApiErrorResponse,
   })
+  @Get()
   async findAll(@Query() query: PaginationParamsDto) {
     const { data, total } = await this.userService.findAll(query);
     return { data, total };
@@ -76,7 +76,7 @@ export class UserController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return {
-      data: await this.userService.findOne(+id),
+      data: await this.userService.findOne(id),
     };
   }
 
@@ -92,20 +92,19 @@ export class UserController {
     type: BaseApiErrorResponse,
   })
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    const data = await this.userService.update(+id, updateUserDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateCourseDto: CreateUserDto,
+  ) {
     return {
-      data,
+      data: await this.userService.update(id, updateCourseDto),
     };
   }
 
-  @ApiOperation({
-    summary: '删除用户',
-  })
-  @ApiResponse({ status: HttpStatus.OK })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND })
+  @ApiOperation({ summary: '删除单个用户' })
+  @ApiResponse({ status: HttpStatus.NO_CONTENT })
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    return await this.userService.remove(+id);
+  remove(@Param('id') id: string) {
+    return this.userService.remove(id);
   }
 }

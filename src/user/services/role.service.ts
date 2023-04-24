@@ -20,7 +20,7 @@ export class RoleService {
     page,
   }: PaginationParamsDto): Promise<{ data: Role[]; total: number }> {
     const [data, total] = await this.RoleRepository.findAndCount({
-      order: { createAt: 'DESC' },
+      order: { createdAt: 'DESC' },
       skip: (page - 1) * pageSize,
       take: pageSize * 1,
       cache: true,

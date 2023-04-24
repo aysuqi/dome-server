@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CreateUserDto } from '../dtos/create-user.dto';
-import { UpdateUserDto } from '../dtos/update-user.dto';
 import { MongoRepository } from 'typeorm';
 import { User } from '../entities/user.mongo.entity';
 import { PaginationParamsDto } from 'src/shared/dots/pagination-params.dto';
@@ -22,7 +21,7 @@ export class UserService {
     page,
   }: PaginationParamsDto): Promise<{ data: User[]; total: number }> {
     const [data, total] = await this.userRepository.findAndCount({
-      order: { createAt: 'DESC' },
+      order: { createdAt: 'DESC' },
       skip: (page - 1) * pageSize,
       take: pageSize * 1,
       cache: true,
@@ -33,15 +32,15 @@ export class UserService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     return await this.userRepository.findOneBy(id);
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: CreateUserDto) {
     return await this.userRepository.update(id, updateUserDto);
   }
 
-  async remove(id: number): Promise<any> {
+  async remove(id: string): Promise<any> {
     return await this.userRepository.delete(id);
   }
 }

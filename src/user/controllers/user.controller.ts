@@ -22,7 +22,6 @@ import {
   BaseApiErrorResponse,
   SwaggerBaseApiResponse,
 } from 'src/shared/dots/base-api-response.dto';
-import { query } from 'express';
 import { PaginationParamsDto } from 'src/shared/dots/pagination-params.dto';
 
 @Controller('users')
@@ -44,7 +43,6 @@ export class UserController {
   @ApiBearerAuth()
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
-    // 测试全局配置信息
     return this.userService.create(createUserDto);
   }
 

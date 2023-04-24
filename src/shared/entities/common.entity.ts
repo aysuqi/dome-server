@@ -1,25 +1,30 @@
 import {
   Column,
   CreateDateColumn,
-  ObjectId,
   ObjectIdColumn,
+  ObjectID,
   UpdateDateColumn,
   VersionColumn,
 } from 'typeorm';
 
 export abstract class Common {
   @ObjectIdColumn()
-  _id: ObjectId;
+  _id: ObjectID;
 
   @CreateDateColumn()
-  createAt: Date;
+  createdAt: Date;
 
   @UpdateDateColumn()
-  updateAt: Date;
+  updatedAt: Date;
 
-  @Column({ default: false, select: false })
+  @Column({
+    default: false,
+    select: false,
+  })
   isDelete: boolean;
 
-  @VersionColumn({ select: false })
+  @VersionColumn({
+    select: false,
+  })
   version: number;
 }

@@ -3,6 +3,7 @@ import { CreateUserDto } from '../dtos/create-user.dto';
 import { MongoRepository } from 'typeorm';
 import { User } from '../entities/user.mongo.entity';
 import { PaginationParamsDto } from 'src/shared/dots/pagination-params.dto';
+import { encryptPassword, makeSalt } from 'src/shared/utils/cryptogram.utiils';
 
 @Injectable()
 export class UserService {
@@ -12,8 +13,14 @@ export class UserService {
     private readonly userRepository: MongoRepository<User>,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
-    return await this.userRepository.save(createUserDto);
+  async create(user: CreateUserDto) {
+    // 加密处理
+    if (user.password) {
+      const { salt, hashPassword } = this.getPassword(user.password);
+      user.password = hashPassword;
+      user.salt = salt;
+    }
+    return await this.userRepository.save(user);
   }
 
   async findAll({
@@ -36,11 +43,23 @@ export class UserService {
     return await this.userRepository.findOneBy(id);
   }
 
-  async update(id: string, updateUserDto: CreateUserDto) {
-    return await this.userRepository.update(id, updateUserDto);
+  async update(id: string, user: CreateUserDto) {
+    // 加密处理
+    if (user.password) {
+      const { salt, hashPassword } = this.getPassword(user.password);
+      user.password = hashPassword;
+      user.salt = salt;
+    }
+    return await this.userRepository.update(id, user);
   }
 
   async remove(id: string): Promise<any> {
     return await this.userRepository.delete(id);
+  }
+
+  getPassword(password) {
+    const salt = makeSalt(); // 制作密码盐
+    const hashPassword = encryptPassword(password, salt); // 加密密码
+    return { salt, hashPassword };
   }
 }

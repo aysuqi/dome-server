@@ -4,6 +4,7 @@ import { generateDocument } from './doc';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { RemoveSensitiveInfoInterceptor } from './shared/interceptors/remove-sensitive-info.interceptor';
 
 async function bootstrap() {
   // 修改运行平台
@@ -19,6 +20,9 @@ async function bootstrap() {
   app.useStaticAssets(uploadDir, {
     prefix: '/static/upload',
   });
+
+  // 添加全局拦截器
+  app.useGlobalInterceptors(new RemoveSensitiveInfoInterceptor());
 
   // 添加全局管道
   app.useGlobalPipes(

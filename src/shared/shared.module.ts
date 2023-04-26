@@ -4,11 +4,18 @@ import { ConfigModule } from '@nestjs/config';
 import { configModuleOptions } from './configs/module-options';
 import { DatabaseProviders } from './database.providers';
 import { AppLoggerModule } from './logger/logger.module';
+import { UploadService } from './upload/upload.service';
 
 @Module({
-  providers: [SystemService, ...DatabaseProviders],
+  providers: [SystemService, ...DatabaseProviders, UploadService],
   // 暴露 config 模块
-  exports: [SystemService, ConfigModule, AppLoggerModule, ...DatabaseProviders],
+  exports: [
+    SystemService,
+    ConfigModule,
+    AppLoggerModule,
+    ...DatabaseProviders,
+    UploadService,
+  ],
   // 注入 config 模块
   imports: [ConfigModule.forRoot(configModuleOptions), AppLoggerModule],
 })

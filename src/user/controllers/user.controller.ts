@@ -8,20 +8,26 @@ import {
   Delete,
   HttpStatus,
   Query,
+  Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import {
   ApiBearerAuth,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   BaseApiErrorResponse,
   SwaggerBaseApiResponse,
 } from 'src/shared/dots/base-api-response.dto';
 import { PaginationParamsDto } from 'src/shared/dots/pagination-params.dto';
+import { UploadDto } from '../dtos/upload.dto';
 
 @Controller('users')
 @ApiTags('用户管理')
@@ -106,5 +112,13 @@ export class UserController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
+  }
+
+  @ApiOperation({ summary: '上传文件' })
+  @ApiConsumes('multipart/form-data')
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  upload(@Req() req: any, @Body() upload: UploadDto, @UploadedFile() file) {
+    return this.userService.uploadAvatar(file);
   }
 }

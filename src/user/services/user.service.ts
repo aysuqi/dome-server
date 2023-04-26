@@ -4,6 +4,7 @@ import { MongoRepository } from 'typeorm';
 import { User } from '../entities/user.mongo.entity';
 import { PaginationParamsDto } from 'src/shared/dots/pagination-params.dto';
 import { encryptPassword, makeSalt } from 'src/shared/utils/cryptogram.utiils';
+import { UploadService } from '../../shared/upload/upload.service';
 
 @Injectable()
 export class UserService {
@@ -11,6 +12,7 @@ export class UserService {
     // 注入 mongo 数据库
     @Inject('USER_REPOSITORY')
     private readonly userRepository: MongoRepository<User>,
+    private readonly uploadService: UploadService,
   ) {}
 
   async create(user: CreateUserDto) {
@@ -55,6 +57,11 @@ export class UserService {
 
   async remove(id: string): Promise<any> {
     return await this.userRepository.delete(id);
+  }
+
+  async uploadAvatar(file) {
+    const { url } = await this.uploadService.upload(file);
+    return { data: url };
   }
 
   getPassword(password) {

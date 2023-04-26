@@ -3,13 +3,16 @@ import { JwtService } from '@nestjs/jwt';
 import { MongoRepository } from 'typeorm';
 import { User } from '../entities/user.mongo.entity';
 import { LoginDto } from '../dtos/login.dto';
-import { encryptPassword } from 'src/shared/utils/cryptogram.utiils';
+import { encryptPassword, makeSalt } from 'src/shared/utils/cryptogram.utiils';
 import { RegisterCodeDTO, UserInfoDto } from '../dtos/auth.dto';
 import { Role } from '../entities/role.mongo.entity';
 import { InjectRedis, Redis } from '@nestjs-modules/ioredis';
+import { CaptchaService } from '../../shared/services/captcha.service';
+import { AppLogger } from 'src/shared/logger/logger.service';
 
 export class AuthService {
   constructor(
+    private readonly logger: AppLogger,
     private readonly jwtService: JwtService,
     // 引入用户表
     @Inject('USER_REPOSITORY')
@@ -20,7 +23,11 @@ export class AuthService {
     // 引入 redis
     @InjectRedis()
     private readonly redis: Redis,
-  ) {}
+
+    private readonly captchaService: CaptchaService,
+  ) {
+    this.logger.setContext(AuthService.name);
+  }
 
   /**
    * 生成 token
@@ -121,7 +128,25 @@ export class AuthService {
       throw new NotFoundException('验证码未过期,无需再次发送');
     }
     const code = this.generateCode();
+    this.logger.info(null, '验证码:' + code);
+    // 验证码存入将Redis
     await this.redis.set('verifyCode' + phoneNumber, code, 'EX', 60);
-    return code;
+    return '';
+  }
+
+  /**
+   * 获取图形验证码
+   */
+  async getCaptcha() {
+    const { data, text } = await this.captchaService.createCaptcha();
+    const id = makeSalt(4);
+    this.logger.info(null, '图形验证码:' + text);
+    // 验证码存入将Redis
+    this.redis.set('captcha' + id, text, 'EX', 600);
+    const image = `data:image/svg+xml;base64,${Buffer.from(data).toString(
+      'base64',
+    )}`;
+
+    return { id, image };
   }
 }

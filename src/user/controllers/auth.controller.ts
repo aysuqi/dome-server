@@ -60,10 +60,18 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.NOT_FOUND, type: BaseApiErrorResponse })
   @Post('registerCode')
   async registerCode(@Body() registerCodeDto: RegisterCodeDTO) {
-    const code = await this.authService.registerCode(registerCodeDto);
+    await this.authService.registerCode(registerCodeDto);
     return {
       message: '生成验证码',
-      code,
+    };
+  }
+
+  @ApiOperation({ summary: '获取图形验证码' })
+  @Get('captcha')
+  async getCaptcha() {
+    const data = await this.authService.getCaptcha();
+    return {
+      data,
     };
   }
 }

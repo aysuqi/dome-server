@@ -18,4 +18,8 @@ export default (): any => ({
       expiresIn: process.env.JWT_EXPIRES_IN, // token 过期时效
     },
   },
+  // 配置redis
+  redis: {
+    url: process.env.REDIS_URL,
+  },
 });

@@ -20,7 +20,7 @@ import {
   SwaggerBaseApiResponse,
 } from 'src/shared/dots/base-api-response.dto';
 import { AuthService } from '../services/auth.service';
-import { UserInfoDto } from '../dtos/auth.dto';
+import { RegisterCodeDTO, UserInfoDto } from '../dtos/auth.dto';
 
 @ApiTags('认证鉴权')
 @Controller('auth')
@@ -50,5 +50,20 @@ export class AuthController {
   async info(@Req() req: any): Promise<any> {
     const data = await this.authService.info(req.user.id);
     return { data };
+  }
+
+  @ApiOperation({ summary: '获取验证码' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    type: SwaggerBaseApiResponse(UserInfoDto),
+  })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, type: BaseApiErrorResponse })
+  @Post('registerCode')
+  async registerCode(@Body() registerCodeDto: RegisterCodeDTO) {
+    const code = await this.authService.registerCode(registerCodeDto);
+    return {
+      message: '生成验证码',
+      code,
+    };
   }
 }

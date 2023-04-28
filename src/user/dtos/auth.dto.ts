@@ -20,9 +20,9 @@ export class RegisterSMSDTO {
   /**
    * 图形验证码
    */
-  @IsNotEmpty({ message: '请输入图形验证码' })
-  @ApiProperty({ example: '0000' })
-  readonly verifyCode: string;
+  // @IsNotEmpty({ message: '请输入图形验证码' })
+  // @ApiProperty({ example: '0000' })
+  // readonly verifyCode: string;
 }
 
 export class RegisterCodeDTO {

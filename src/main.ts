@@ -31,6 +31,7 @@ async function bootstrap() {
       forbidUnknownValues: false,
     }),
   );
+
   // 创建 swagger api 文档
   generateDocument(app);
   await app.listen(3000);

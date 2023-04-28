@@ -16,5 +16,5 @@ export const generateDocument = (app) => {
   // 创建文档
   const document = SwaggerModule.createDocument(app, options);
 
-  SwaggerModule.setup('/api/doc', app, document);
+  SwaggerModule.setup('/', app, document);
 };

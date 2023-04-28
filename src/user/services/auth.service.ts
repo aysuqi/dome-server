@@ -4,11 +4,13 @@ import { MongoRepository } from 'typeorm';
 import { User } from '../entities/user.mongo.entity';
 import { LoginDto } from '../dtos/login.dto';
 import { encryptPassword, makeSalt } from 'src/shared/utils/cryptogram.utiils';
-import { RegisterCodeDTO, UserInfoDto } from '../dtos/auth.dto';
+import { RegisterCodeDTO, RegisterSMSDTO, UserInfoDto } from '../dtos/auth.dto';
 import { Role } from '../entities/role.mongo.entity';
 import { InjectRedis, Redis } from '@nestjs-modules/ioredis';
 import { CaptchaService } from '../../shared/services/captcha.service';
 import { AppLogger } from 'src/shared/logger/logger.service';
+import { RegisterDTO } from '../dtos/auth.dto';
+import { UserService } from './user.service';
 
 export class AuthService {
   constructor(
@@ -25,6 +27,7 @@ export class AuthService {
     private readonly redis: Redis,
 
     private readonly captchaService: CaptchaService,
+    private readonly userService: UserService,
   ) {
     this.logger.setContext(AuthService.name);
   }
@@ -121,14 +124,24 @@ export class AuthService {
    * @returns
    */
   async registerCode(codeDto: RegisterCodeDTO) {
-    const { phoneNumber } = codeDto;
+    const { phoneNumber, captchaId, captchaCode } = codeDto;
+    // 校验图形验证码
+    const captcha = await this.redis.get('captcha' + captchaId);
+    if (
+      !captcha ||
+      captcha.toLocaleLowerCase() !== captchaCode.toLocaleLowerCase()
+    ) {
+      throw new NotFoundException('图形验证码错误');
+    }
+
+    // 获取短信验证码
     const redisData = await this.getMobileVerifyCode(phoneNumber);
     if (redisData !== null) {
       // 验证码未过期
       throw new NotFoundException('验证码未过期,无需再次发送');
     }
     const code = this.generateCode();
-    this.logger.info(null, '验证码:' + code);
+    this.logger.info(null, '验证码:', { code });
     // 验证码存入将Redis
     await this.redis.set('verifyCode' + phoneNumber, code, 'EX', 60);
     return '';
@@ -140,7 +153,7 @@ export class AuthService {
   async getCaptcha() {
     const { data, text } = await this.captchaService.createCaptcha();
     const id = makeSalt(4);
-    this.logger.info(null, '图形验证码:' + text);
+    this.logger.info(null, '图形验证码:', { id, text });
     // 验证码存入将Redis
     this.redis.set('captcha' + id, text, 'EX', 600);
     const image = `data:image/svg+xml;base64,${Buffer.from(data).toString(
@@ -148,5 +161,78 @@ export class AuthService {
     )}`;
 
     return { id, image };
+  }
+
+  /**
+   * 校验注册信息
+   * @param dto
+   */
+  async checkRegisterFrom(dto: RegisterDTO): Promise<any> {
+    const { password, passwordRepeat, phoneNumber } = dto;
+    // 校验密码是否一致
+    if (password !== passwordRepeat) {
+      throw new NotFoundException('两次输入的密码不一致，请检查');
+    }
+
+    // 校验用户是否存在
+    const hasUser = await this.userRepository.findOneBy({ phoneNumber });
+    if (hasUser) {
+      throw new NotFoundException('用户已存在');
+    }
+  }
+
+  /**
+   * 注册新用户
+   * @param dto
+   * @returns
+   */
+  async register(dto: RegisterDTO): Promise<any> {
+    const { password, name, phoneNumber } = dto;
+    // 校验注册信息
+    await this.checkRegisterFrom(dto);
+    // 创建新用户
+    const { salt, hashPassword } = this.userService.getPassword(password);
+    const newUser: User = new User();
+    newUser.phoneNumber = phoneNumber;
+    newUser.name = name;
+    newUser.password = hashPassword;
+    newUser.salt = salt;
+    const data = await this.userRepository.save(newUser);
+    this.logger.info(null, '注册新用户', { ...data });
+
+    return { data };
+  }
+
+  /**
+   * 短信注册
+   * @param smsDto
+   * @returns
+   */
+  async registerBySMS(smsDto: RegisterSMSDTO): Promise<any> {
+    const { phoneNumber, smsCode } = smsDto;
+    // 短信验证码校验
+    const code = await this.getMobileVerifyCode(phoneNumber);
+    if (smsCode !== code) {
+      throw new NotFoundException('验证码不一致，或已过期');
+    }
+    // 用户是否存在
+    let user = await this.userRepository.findOneBy({ phoneNumber });
+    if (!user) {
+      // 用户不存在匿名注册
+      const password = makeSalt(8);
+      user = await this.register({
+        phoneNumber,
+        name: `手机用户${phoneNumber}`,
+        password,
+        passwordRepeat: password,
+      });
+    }
+
+    const token = await this.certificate(user);
+    return {
+      data: {
+        token,
+      },
+    };
   }
 }

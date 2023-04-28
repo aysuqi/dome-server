@@ -64,6 +64,11 @@ export class UserService {
     return { data: url };
   }
 
+  /**
+   * 获取密码盐
+   * @param password
+   * @returns
+   */
   getPassword(password) {
     const salt = makeSalt(); // 制作密码盐
     const hashPassword = encryptPassword(password, salt); // 加密密码

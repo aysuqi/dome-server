@@ -1,7 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { MongoRepository } from 'typeorm';
 import { Menu } from '../entities/menu.mongo.entity';
-import { Article } from '../entities/article.mongo.entity';
 import { CreateMenuDto } from '../dto/menu.dto';
 
 @Injectable()

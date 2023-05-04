@@ -5,11 +5,14 @@ import {
   HttpStatus,
   Post,
   Req,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -21,6 +24,8 @@ import {
 } from 'src/shared/dots/base-api-response.dto';
 import { AuthService } from '../services/auth.service';
 import { RegisterCodeDTO, RegisterSMSDTO, UserInfoDto } from '../dtos/auth.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadDto } from '../dtos/upload.dto';
 
 @ApiTags('认证鉴权')
 @Controller('auth')

@@ -7,8 +7,17 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ArticleService } from '../services/article.service';
 import { CreateArticleDto } from '../dto/article.dto';
 import {
@@ -16,6 +25,9 @@ import {
   SwaggerBaseApiResponse,
 } from 'src/shared/dots/base-api-response.dto';
 import { PaginationParamsDto } from 'src/shared/dots/pagination-params.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from '@nestjs/passport';
+import { UploadDto } from 'src/user/dtos/upload.dto';
 
 @ApiTags('文章管理')
 @Controller('article')
@@ -89,5 +101,16 @@ export class ArticleController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return this.articleService.remove(id);
+  }
+
+  @ApiOperation({ summary: '文章导入' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiBearerAuth()
+  @UseGuards(AuthGuard('jwt'))
+  @Post('/article/import')
+  async articleImport(@UploadedFile() file, @Body() uploadDto: UploadDto) {
+    await this.articleService.import(file);
+    return;
   }
 }

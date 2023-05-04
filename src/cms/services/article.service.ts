@@ -8,6 +8,8 @@ import compressing from 'compressing';
 import path from 'path';
 import fs from 'fs';
 import { MenuService } from './menu.service';
+import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
 
 @Injectable()
 export class ArticleService {
@@ -16,6 +18,7 @@ export class ArticleService {
     private readonly articleRepository: MongoRepository<Article>,
     private readonly uploadService: UploadService,
     private readonly menuService: MenuService,
+    private readonly configService: ConfigService,
   ) {}
 
   create(articleDto: CreateArticleDto) {
@@ -43,11 +46,30 @@ export class ArticleService {
   async update(id: string, updateDto: CreateArticleDto) {
     // 去除时间戳和id
     ['_id', 'cerateAt', 'updateAt'].forEach((k) => delete Article[k]);
+    await this.sync(id);
     return await this.articleRepository.update(id, updateDto);
   }
 
   async remove(id: string) {
     return await this.articleRepository.delete(id);
+  }
+
+  /**
+   * 同步文章
+   * @param id
+   * @returns
+   */
+  async sync(id: string) {
+    const secret = this.configService.get<string>('cms.validateToken');
+    const host = this.configService.get<string>('cms.host');
+    const url = `api/revalidate?secret=${secret}&id=${id}`;
+    try {
+      await axios.get(host + '/' + url);
+    } catch (error) {
+      console.log('同步失败');
+      throw error;
+    }
+    return;
   }
 
   /**

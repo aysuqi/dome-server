@@ -5,6 +5,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { RemoveSensitiveInfoInterceptor } from './shared/interceptors/remove-sensitive-info.interceptor';
+import helmet from 'helmet';
 
 async function bootstrap() {
   // 修改运行平台
@@ -31,6 +32,9 @@ async function bootstrap() {
       forbidUnknownValues: false,
     }),
   );
+
+  // 基于Helmet的HTTP安全加固
+  app.use(helmet());
 
   // 创建 swagger api 文档
   generateDocument(app);

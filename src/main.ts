@@ -6,6 +6,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { RemoveSensitiveInfoInterceptor } from './shared/interceptors/remove-sensitive-info.interceptor';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 
 async function bootstrap() {
   // 修改运行平台
@@ -35,6 +36,13 @@ async function bootstrap() {
 
   // 基于Helmet的HTTP安全加固
   app.use(helmet());
+  // 基于Rate limiting的频次控制
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 3,
+    }),
+  );
 
   // 创建 swagger api 文档
   generateDocument(app);
